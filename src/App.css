@@ -1,15 +1,124 @@
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* apply a natural box layout model to all elements, but allowing components to change */
+html {
+  box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
 .Mingle {
-  padding: 10px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  color: #444;
+  font-family: 'Overpass Mono', monospace;
+}
+
+.Mingle-pageWrap,
+.Mingle-contentWrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .Mingle-plusSign {
-  margin-right: 5px;
+  margin: 15px 10px 0 0;
+  font-size: 30px;
+  line-height: 10px;
+  cursor: pointer;
+}
+
+.Mingle-plusSign:hover {
+  opacity: .7;
 }
 
 .Mingle-logo {
-  letter-spacing: 1px;
+  letter-spacing: 2px;
+  font-size: 20px;
+  margin: 5px 0 0 10px;
+  display: flex;
+  color: #3731e6;
+}
+
+.Mingle-logoName {
+  text-transform: lowercase;
 }
 
 .Mingle-header {
   margin-bottom: 15px;
+}
+
+.Mingle-navigation {
+  display: flex;
+}
+
+.Mingle-navItem {
+  flex: 1;
+  color: white;
+  border-right: 1px solid #ccc;
+  background-color: #4da0a5;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.Mingle-navItem:hover {
+  opacity: .7;
+}
+
+.Mingle-subNav {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.Mingle-subNavItem {
+  color: white;
+  display: flex;
+  width: 170px;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.Mingle-subNavItem:hover {
+  opacity: .7;
+}
+
+.Mingle-tagList {
+  display: flex;
+}
+
+.Mingle-tag {
+  padding: 0 10px;
+}
+
+.Mingle-eventItem {
+  padding: 20px 10px;
+}
+
+.Mingle-eventsList {
+  overflow-y: scroll;
+  overflow-x: hidden;
+  padding: 0 20px;
+}
+
+.Mingle-eventList {
+  margin-bottom: 20px;
+}
+
+.Mingle-eventTitle {
+  font-size: 16px;
+  border-bottom: 1px solid #ccc;
+}
+
+.u-displayFlex {
+  display: flex;
 }

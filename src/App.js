@@ -4,8 +4,47 @@ import {Provider, connect} from "react-redux"
 import createLogger from "redux-logger"
 import thunk from "redux-thunk"
 import * as R from "ramda"
+import { IndexRoute, Router, Route, Link, browserHistory } from 'react-router'
+
+const colors = [
+  { backgroundColor: "#444"   , color: "white"   },
+  { backgroundColor: "blue"   , color: "white"   },
+  { backgroundColor: "cyan"   , color: "blue"    },
+  { backgroundColor: "red"    , color: "white"   },
+  { backgroundColor: "pink"   , color: "white"   },
+  { backgroundColor: "yellow" , color: "red"     },
+  { backgroundColor: "#64c7cc", color: "cyan"    },
+  { backgroundColor: "#00a64d", color: "#75f0c3" },
+  { backgroundColor: "#f5008b", color: "#ffdbbf" },
+  { backgroundColor: "#0469bd", color: "#75d2fa" },
+  { backgroundColor: "#fcf000", color: "#d60000" },
+  { backgroundColor: "#010103", color: "#fa8e66" },
+  { backgroundColor: "#7a2c02", color: "#fff3e6" },
+  { backgroundColor: "white"  , color: "red"     },
+  { backgroundColor: "#f5989c", color: "#963e03" },
+  { backgroundColor: "#ed1c23", color: "#fff780" },
+  { backgroundColor: "#f7f7f7", color: "#009e4c" },
+  { backgroundColor: "#e04696", color: "#9c2c4b" }]
 
 const getCurrentUser = state => R.path(state.currentUser, state)
+
+const getEvents = state => {
+  const user = getCurrentUser(state)
+  return R.map(path => R.path(path, state), user.events)
+}
+
+const formatEvents = events => {
+  return {
+    upcoming: [events[0]],
+    today: [events[1]],
+    history: [events[2]]
+  }
+}
+
+const getFormattedUserName = state => {
+  const name = getCurrentUser(state).name
+  return (name || "").replace(" ", "_")
+}
 
 const CREATE_NEW_EVENT = "CREATE_NEW_EVENT"
 const createNewEvent = () => {
@@ -22,7 +61,7 @@ const initialState = {
       name: "Ryan Haywood",
       email: "ryanhaywoodj@gmail.com",
       hubs: [["hubs", 1], ["hubs", 2], ["hubs", 3]],
-      events: [["events", 1], ["events", 2]],
+      events: [["events", 1], ["events", 2], ["events", 3]],
       friends: [["people", 2]]
     }
   },
@@ -46,11 +85,17 @@ const initialState = {
       tags: [["tags", 1], ["tags", 2], ["tags", 3]]
     },
     2: {
-      time: new Date(),
+      time: new Date("6/6/2017"),
       place: "Ft greene",
-      name: "OA",
+      name: "K Birthday",
       tags: [["tags", 4], ["tags", 5], ["tags", 6]]
-    }
+    },
+    3: {
+      time: new Date("1/22/2017"),
+      place: "Paulie Gee's",
+      name: "Haywood's Birthday",
+      tags: [["tags", 1], ["tags", 4], ["tags", 5]]
+    },
   }
 }
 
@@ -75,17 +120,20 @@ import './App.css'
 
 const Header = props =>
   <div className="Mingle-header" style={{display: "flex", justifyContent: "space-between"}}>
-    <div className="Mingle-logo">mingle</div>
-    <div style={{display: "flex"}}>
-      <div onClick={props.createNewEvent} className="Mingle-plusSign">+</div>
-      <input className="Mingle-search" placeholder="Search hubs" />
-      </div>
+    <div className="Mingle-logo">m:/<div className="Mingle-logoName">{props.name}/</div></div>
+    <div onClick={props.createNewEvent} className="Mingle-plusSign">+</div>
   </div>
 
-const ConnectedHeader = connect(null, {createNewEvent})(Header)
+const headerMapStateToProps = state => {
+  return {
+    name: getFormattedUserName(state)
+  }
+}
+
+const ConnectedHeader = connect(headerMapStateToProps, {createNewEvent})(Header)
 
 const EventTags = props =>
-  <div>
+  <div className="Mingle-tagList">
     {R.map(tag =>
       <div className="Mingle-tag" key={tag.name}>{tag.name}</div>
     , props.tags)}
@@ -100,35 +148,38 @@ const eventTagsMSTP = (state, props) => {
 
 const ConnectedEventTags = connect(eventTagsMSTP)(EventTags)
 
-const UserEvents = props =>
-  <div className="Mingle-eventsList">
-    <h1>Events</h1>
+const EventList = props =>
+  <div className="Mingle-eventList">
+    <div className="Mingle-eventTitle">{props.title}</div>
     {R.map(event =>
-      <div key={event.name}>
-        <ul>
-          <li>Name: {event.name}</li>
-          <li>Time: {event.time.toString()}</li>
-          <li>Tags: <ConnectedEventTags tags={event.tags} /></li>
-        </ul>
+      <div className="Mingle-eventItem" key={event.name}>
+        <div>Name: {event.name}</div>
+        <div>Time: {event.time.toString()}</div>
+        <div className="u-displayFlex">Tags: <ConnectedEventTags tags={event.tags} /></div>
       </div>
     , props.events)}
   </div>
 
+const UserEvents$ = props =>
+  <div className="Mingle-eventsList">
+    <EventList events={props.today} title="Today" />
+    <EventList events={props.upcoming} title="Upcoming" />
+    <EventList events={props.history} title="History" />
+  </div>
+
 const userEventsMapStateToProps = state => {
-  const user = getCurrentUser(state)
-  const events = R.map(path => R.path(path, state), user.events)
+  const events = formatEvents(getEvents(state))
 
   return {
-    events
+    ...events
   }
 }
 
-const ConnectedUserEvents = connect(userEventsMapStateToProps)(UserEvents)
+const UserEvents = connect(userEventsMapStateToProps)(UserEvents$)
 
 const User = props =>
   <div>
-    <div className="Mingle-userName">{props.name}</div>
-    <ConnectedUserEvents />
+    <div className="Mingle-userName">{props.params.user_id}</div>
   </div>
 
 const userMapStateToProps = state => {
@@ -140,13 +191,38 @@ const userMapStateToProps = state => {
 
 const ConnectedUser = connect(userMapStateToProps)(User)
 
-const App = () =>
+const App = props =>
   <div className="Mingle">
-    <ConnectedHeader />
-    <ConnectedUser />
+    <div className="Mingle-pageWrap">
+      <ConnectedHeader />
+      {props.children}
+    </div>
+    <div className="Mingle-navigation">
+      <div className="Mingle-navItem">Home</div>
+      <div className="Mingle-navItem">Friends</div>
+      <div className="Mingle-navItem">Events</div>
+      <div className="Mingle-navItem">Alerts</div>
+      <div className="Mingle-navItem">Messages</div>
+    </div>
   </div>
 
-console.log(store.getState())
+const Home$ = () =>
+  <div className="Mingle-contentWrap">
+    <div className="Mingle-subNav">
+      <div className="Mingle-subNavItem" style={{backgroundColor: "#e04696"}}>Events</div>
+      <div className="Mingle-subNavItem" style={{backgroundColor: "#ed1c23"}}>Hubs</div>
+    </div>
+    <UserEvents />
+  </div>
+
+const Home = connect(null)(Home$)
 
 export default () =>
-  <Provider store={store}><App /></Provider>
+  <Provider store={store}>
+    <Router history={browserHistory}>
+      <Route path={"/"} component={App}>
+        <IndexRoute component={Home} />
+        <Route path={"/users/:user_id"} component={ConnectedUser} />
+      </Route>
+    </Router>
+  </Provider>
